@@ -65,8 +65,8 @@ class TrackerParser{
 			curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($post));
 		}
 		if($cookiefile){
-			curl_setopt($curl, CURLOPT_COOKIEJAR, $this->$cookiedir.'/'.$cookiefile);
-			curl_setopt($curl, CURLOPT_COOKIEFILE, $this->$cookiedir.'/'.$cookiefile);
+			curl_setopt($curl, CURLOPT_COOKIEJAR, parent::$cookiedir.'/'.$cookiefile);
+			curl_setopt($curl, CURLOPT_COOKIEFILE, parent::$cookiedir.'/'.$cookiefile);
 		}
 		if($cookies){
 			curl_setopt($curl, CURLOPT_COOKIE, $cookies);
