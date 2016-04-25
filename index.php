@@ -2,7 +2,7 @@
 ini_set('error_reporting', E_ALL);
 ini_set('display_errors', 1);
 $routes = explode('/',$_SERVER['REQUEST_URI']);
-if(!empty($routes[1]) && && file_exists('trackers/'.$routes[1].'Parser.php' )){
+if(!empty($routes[1]) && file_exists('trackers/'.$routes[1].'Parser.php' )){
 	require_once('TrackersParser.php');
 	require_once('trackers/'.$routes[1].'Parser.php');
 	$class_name = $routes[1].'Parser';
