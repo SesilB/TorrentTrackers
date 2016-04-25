@@ -2,7 +2,7 @@
 class TrackerParser{
 	protected $login;
 	protected $password;
-	protected $cookiedir = 'cookies';
+	private $cookiedir = 'cookies';
 	public function __construct($args=array()){
 		if(!isset($args['login'])|| !isset($args['password'])){
 			$this->show_error('не указан login или password');
@@ -65,8 +65,8 @@ class TrackerParser{
 			curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($post));
 		}
 		if($cookiefile){
-			curl_setopt($curl, CURLOPT_COOKIEJAR, parent::$cookiedir.'/'.$cookiefile);
-			curl_setopt($curl, CURLOPT_COOKIEFILE, parent::$cookiedir.'/'.$cookiefile);
+			curl_setopt($curl, CURLOPT_COOKIEJAR, $this->$cookiedir.'/'.$cookiefile);
+			curl_setopt($curl, CURLOPT_COOKIEFILE, $this->$cookiedir.'/'.$cookiefile);
 		}
 		if($cookies){
 			curl_setopt($curl, CURLOPT_COOKIE, $cookies);
