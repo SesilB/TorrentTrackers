@@ -13,7 +13,11 @@ if(!empty($routes[1]) && file_exists('trackers/'.$routes[1].'Parser.php' )){
 	if(!empty($routes[2]) && method_exists($tracker,$routes[2])){
 		$method = $routes[2];
 		$result = $tracker -> $method($_REQUEST);
-		echo json_encode($result);
+		if(isset($_REQUEST['callback'])){
+			echo $_REQUEST["callback"] . "(" . json_encode($result). ")";
+		}else{
+			echo json_encode($result);
+		}
 	}
 }
 ?>
