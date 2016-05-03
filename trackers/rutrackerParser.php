@@ -19,9 +19,9 @@ class rutrackerParser extends TrackerParser{
 		}
 		$start = (intval($page) - 1)*50;
 		$result = $this->curl('http://rutracker.org/forum/tracker.php?nm='.$query.'&start='.$start.'&f='.$categories,array('search'=>'dd'),self::$cookiefile);
-		//$result = iconv('windows-1251','utf-8',$result['out']);
-		$result = $result['out'];
-		echo $result;
+		$result = iconv('windows-1251','utf-8',$result['out']);
+		//$result = $result['out'];
+		//echo $result;
 		preg_match("/med bold.*>.*: (\d*) \D/",$result,$matches);
 		$pages = ceil(intval($matches[1])/50);
 		$result = substr($result,strpos($result,'<table class="forumline tablesorter" id="tor-tbl">'));
