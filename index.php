@@ -1,6 +1,9 @@
 <?php
 ini_set('error_reporting', E_ALL);
 ini_set('display_errors', 1);
+if(!is_dir('cookies')){
+	mkdir('cookies');
+}
 $routes = explode('/',$_SERVER['REQUEST_URI']);
 if(!empty($routes[1]) && file_exists('trackers/'.$routes[1].'Parser.php' )){
 	require_once('TrackersParser.php');
