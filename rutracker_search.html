@@ -1,0 +1,300 @@
+<!doctype html>
+<html>
+<head>
+<title>Rutracker search</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+<link href="http://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css" rel="stylesheet">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<style>
+html,body{
+	width:100%;
+	height:100%;
+}
+td.category{
+	font-size:10px;
+	width:150px;
+}
+.js-source-states{
+	width:500px;
+}
+.navbar{
+	border-radius:0px;
+}
+#query{
+	width:400px;
+}
+.pagination li{
+	cursor:pointer;
+}
+#categories_dialog{
+	position:absolute;
+	z-index: 999;
+	top:70px;
+	left:20px;
+	width:400px;
+	box-shadow: 2px 7px 10px 0 rgba(0,0,0,.2);
+}
+#categories_list{
+	font-size:12px;
+	width:100%;
+	margin-bottom: 0px;
+}
+#categories_list .list-group-item:first-child{
+	border-radius:0px;
+}
+#categories_list .list-group-item{
+	padding:3px 1px;
+	cursor:pointer;
+}
+#return_button{
+	display:none;
+}
+#settings_icon{
+	font-size:25px;
+	margin-left:10px;
+	margin-right:10px;
+}
+.navbar-form{
+	margin-top:0px;
+	margin-bottom:0px;
+}
+.settings-item-title{
+	margin-top:30px;
+}
+</style>
+</head>
+<body>
+<nav class="navbar navbar-inverse" role="navigation">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+		</div>
+		<div class="navbar-collapse collapse">
+			<form class="navbar-form navbar-left" role="search" action="javascript:void(null)">
+				<div class="form-group">
+					<button class="btn btn-default navbar-btn" onclick="" data-toggle="collapse" data-target="#categories_dialog">Категории</button>
+				</div>
+			</form>
+			<form class="navbar-form navbar-right" role="search" action="javascript:void(null)">
+				<div class="form-group">
+					<input type="text" id="query" class="form-control" placeholder="Введите запрос">
+				</div>
+				<button type="submit" class="btn btn-default navbar-btn" onclick="rutracker_search.search(1)">Искать</button>
+					<a class="form-group" data-toggle="modal" data-target="#settings" id="settings_icon"><i class="icon ion-gear-b" ></i></a>
+			</form>
+		</div>
+	</div>
+</nav>
+<div id="categories_dialog" class="collapse">
+	<div class="btn-group btn-group-sm">
+		<button type="button" class="btn btn-default" title="назад" id="return_button"><i class="icon ion-arrow-return-left"></i></button>
+		<button type="button" class="btn btn-default" data-toggle="collapse" data-target="#categories_dialog"><i class="icon ion-close"></i></button>
+	</div>
+	<ul class="list-group" id="categories_list"></ul>
+</div>
+<main class="container">
+<div id="results" style="display:none;">
+	<div class="text-center">
+		<ul class="pagination">
+			<li class="active"><a>1</a></li>
+		</ul>
+	</div>
+	<table class="table" id="results_table">
+		<thead>
+			<tr>
+				<th>Категория</th>
+				<th>Название</th>
+				<th>Размер</th>
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+	<div class="text-center">
+		<ul class="pagination">
+			<li class="active"><a>1</a></li>
+		</ul>
+	</div>
+</div>
+</main>
+<div class="modal fade" id="settings" tabindex="-1" role="dialog" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+				<h4 class="modal-title">Настройки</h4>
+			</div>
+			<div class="modal-body">
+				<form action="javascript:void(null)" id="settings_form">
+					<div class="row">
+						<div class="col-sm-4">
+							<h4 class="settings-item-title">Rutracker</h4>
+						</div>
+						<div class="form-group col-sm-4">
+							<label>Логин:</label>
+							<input type="text" class="form-control" name="rutracker_login" value="">
+						</div>
+						<div class="form-group col-sm-4">
+							<label>Пароль:</label>
+							<input type="text" class="form-control" name="rutracker_password" value="">
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Закрыть</button>
+				<button type="button" class="btn btn-primary" onclick="rutracker_search.save_settings()">Сохранить</button>
+      </div>
+		</div>
+	</div>
+</div>
+<script>
+var rutracker_search = {
+	api_url:              'https://torrenttrackers.herokuapp.com',
+	content_script_id:    'load_content_script',
+	categories_script_id: 'categories_list_script',
+	categories_list:{},
+	selected_categories:[],
+	init:function(){
+		this.init_error = false;
+		this.login = localStorage.getItem("rutracker_login");
+		this.password = localStorage.getItem("rutracker_password");
+		if(this.login == null){
+			this.init_error = true;
+			var error_field = document.getElementsByName("rutracker_login")[0];
+			error_field.parentNode.classList.add("has-error");
+		}
+		if(this.password == null){
+			this.init_error = true;
+			error_field = document.getElementsByName("rutracker_password")[0];
+			error_field.parentNode.classList.add("has-error");
+		}
+		if(this.init_error){
+			$("#settings").modal("show");
+			return false;
+		}else{
+			document.getElementsByName("rutracker_login")[0].value = this.login;
+			document.getElementsByName("rutracker_password")[0].value = this.password;
+		}
+	},
+	search:function(page){
+		if(this.init_error){
+			this.init();
+			return false;
+		}
+		var query = document.getElementById('query').value;
+		page =  page || document.querySelector(".pagination .active a").innerHTML;
+		console.log(this.selected_categories);
+		var categories = '-1';
+		console.log(this.selected_categories.length);
+		if(this.selected_categories.length >0){
+			categories = this.selected_categories.join(',');
+		}
+		var params = {login:this.login,password:this.password,query:query,callback:'rutracker_search.load_content',page:page,categories:categories};
+		this.load_script(this.content_script_id,'search',params);
+	},
+	load_script:function(script_id,action,params){
+		if(document.getElementById(script_id)){
+			document.getElementsByTagName('head')[0].removeChild(document.getElementById(script_id));
+		}
+		var script = document.createElement('script');
+		script.id = script_id;
+		
+		script.src = this.api_url+'/rutracker/'+action+'/?'+this.encode_params(params);
+		document.getElementsByTagName('head')[0].appendChild(script);
+	},
+	load_content: function(result){
+		console.log(result);
+		var content = '';
+		for(var i = 1; i <= result.pages; i++){
+			if(i == result.page){
+				content += '<li class="active"><a>'+i+'</a></li>';
+			}else{
+				content += '<li onclick="rutracker_search.search('+i+')"><a>'+i+'</a></li>';
+			}
+		}
+		var paginations = document.querySelectorAll('.pagination');
+		for(var i = 0; i <paginations.length; i++){
+			paginations[i].innerHTML = content;
+		}
+		var content = '';
+		result.torrents.forEach(function(torrent){
+			content += '<tr>';
+			content += '<td class="category">'+torrent.category+'</td>';
+			content += '<td class="title">'+torrent.title+'</td>';
+			content += '<td class="size"><a href="'+rutracker_search.api_url+'/rutracker/download/?login='+rutracker_search.login+'&password='+rutracker_search.password+'&url='+torrent.link+'">'+torrent.size+'</a></td>';
+			content += '</tr>';
+		});
+		document.querySelector('#results_table tbody').innerHTML = content;
+		document.getElementById('results').style.display = 'block';
+	},
+	getcategories:function(){
+		var params = {login:this.login,password:this.password,callback:'rutracker_search.load_groups'};
+		this.load_script(this.categories_script_id,'getCategories',params);
+	},
+	load_groups:function(result){
+		this.categories_list = result;
+		var content = '';
+		result.groups.forEach(function(group,i){
+			content += '<li class="list-group-item" onclick="rutracker_search.load_categories('+i+')">'+group.title+'</li>';
+		});
+		document.getElementById('categories_list').innerHTML = content;
+	},
+	load_categories:function(group){
+		document.getElementById('categories_list').innerHTML = '';
+		var content = '';
+		this.categories_list.groups[group].categories.forEach(function(category,i){
+			content += '<li class="list-group-item" data-group="'+i+'" onclick="rutracker_search.load_subcategories('+group+','+i+')">'+category.title+'</li>';
+		});
+		document.getElementById('categories_list').innerHTML = content;
+		document.getElementById('return_button').style.display = 'block';
+		document.getElementById('return_button').onclick = function(){rutracker_search.load_groups(rutracker_search.categories_list)};
+	},
+	load_subcategories:function(group,category){
+		document.getElementById('categories_list').innerHTML = '';
+		var content = '';
+		this.categories_list.groups[group].categories[category].subcategories.forEach(function(subcategory,i){
+			var checked = '';
+			if(rutracker_search.selected_categories.indexOf(subcategory.id) !== -1){
+				checked = 'checked';
+			}
+			content += '<li class="list-group-item"><label><input type="checkbox" onchange="rutracker_search.change_selected(this,'+subcategory.id+')" '+checked+'/> '+subcategory.title+'</label></li>';
+		});
+		document.getElementById('categories_list').innerHTML = content;
+		document.getElementById('return_button').onclick = function(){rutracker_search.load_categories(group)};
+	},
+	change_selected:function(checkbox,subcategory_id){
+		if(checkbox.checked){
+			this.selected_categories.push(subcategory_id);
+		}else{
+			this.selected_categories.splice(this.selected_categories.indexOf(subcategory_id), 1);
+		}
+	},
+	save_settings:function(){
+		var rutracker_login  = document.getElementsByName("rutracker_login")[0].value;
+		var rutracker_password  = document.getElementsByName("rutracker_password")[0].value;
+		if(rutracker_login !== '' && rutracker_password !== ''){
+			localStorage.setItem('rutracker_login', rutracker_login);
+			localStorage.setItem('rutracker_password', rutracker_password);
+		}
+		this.init();
+	},
+	encode_params:function(params){
+		var output = [];
+		for(var param in params){
+			output.push(param + '=' + encodeURIComponent(params[param]));
+		}
+		return output.join('&');
+	}
+}
+rutracker_search.init();
+</script>
+</body>
